@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cortes de Podcast — Analisador Viral</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #222;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #f0f0f0;
+    --text2: #999;
+    --text3: #555;
+    --accent: #e8ff47;
+    --accent-dim: rgba(232,255,71,0.08);
+    --accent-text: #1a1a00;
+    --info-bg: rgba(55,138,221,0.12);
+    --info-text: #7ab8f5;
+    --warn-bg: rgba(186,117,23,0.14);
+    --warn-text: #f0b84a;
+    --radius: 10px;
+    --radius-lg: 14px;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 2rem 1rem 4rem;
+  }
+
+  .container { max-width: 780px; margin: 0 auto; }
+
+  header {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 0.5px solid var(--border);
+  }
+
+  .logo-mark {
+    width: 42px;
+    height: 42px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .logo-mark svg { width: 22px; height: 22px; }
+
+  h1 {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    line-height: 1.2;
+  }
+
+  h1 span { color: var(--text2); font-weight: 400; font-size: 14px; display: block; margin-top: 2px; }
+
+  .card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1rem;
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 1rem;
+  }
+
+  .alert {
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 1.25rem;
+  }
+
+  .alert-info { background: var(--info-bg); color: var(--info-text); border: 0.5px solid rgba(55,138,221,0.2); }
+  .alert-warn { background: var(--warn-bg); color: var(--warn-text); border: 0.5px solid rgba(186,117,23,0.25); }
+  .alert svg { flex-shrink: 0; margin-top: 1px; }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 1rem;
+  }
+
+  @media (max-width: 520px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  label {
+    font-size: 12px;
+    color: var(--text2);
+    font-weight: 500;
+  }
+
+  input[type="text"],
+  input[type="number"],
+  select,
+  textarea {
+    background: var(--surface2);
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    padding: 9px 12px;
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+
+  select option { background: #1a1a1a; }
+
+  .tip {
+    font-size: 11px;
+    color: var(--text3);
+    line-height: 1.5;
+    margin-top: 2px;
+  }
+
+  textarea {
+    min-height: 180px;
+    resize: vertical;
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: var(--accent-text);
+    border: none;
+    border-radius: var(--radius);
+    padding: 11px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    letter-spacing: -0.01em;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-primary:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .btn-dl {
+    background: transparent;
+    border: 0.5px solid var(--border2);
+    border-radius: var(--radius);
+    color: var(--text);
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    text-decoration: none;
+    transition: background 0.15s;
+  }
+
+  .btn-dl:hover { background: var(--surface2); }
+
+  .actions-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1.5rem;
+  }
+
+  #output { display: none; flex-direction: column; gap: 1rem; }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 0.5rem;
+  }
+
+  .results-count {
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .results-count strong { color: var(--accent); }
+
+  .clip-card {
+    background: var(--surface);
+    border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: border-color 0.2s;
+  }
+
+  .clip-card:hover { border-color: var(--border2); }
+
+  .clip-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .clip-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent-dim);
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .tc {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--surface2);
+    border: 0.5px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 8px;
+    color: var(--text2);
+  }
+
+  .dur-badge {
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  .clip-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+    line-height: 1.4;
+  }
+
+  .thumb-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .thumb-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .thumb-pill {
+    background: var(--accent);
+    color: var(--accent-text);
+    border-radius: 6px;
+    padding: 3px 10px;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .divider { height: 0.5px; background: var(--border); }
+
+  .clip-why {
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.65;
+  }
+
+  .clip-why::before {
+    content: '↗ ';
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    flex-shrink: 0;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text2);
+    font-size: 14px;
+    padding: 1.5rem 0;
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 0.5px solid var(--border);
+    font-size: 12px;
+    color: var(--text3);
+    text-align: center;
+    line-height: 1.7;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#0f0f0f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <polygon points="5 3 19 12 5 21 5 3"/>
+      </svg>
+    </div>
+    <div>
+      <h1>Cortes de Podcast <span>Analisador de clipes com potencial viral</span></h1>
+    </div>
+  </header>
+
+  <div class="card">
+    <div class="section-label">Configuração do projeto</div>
+
+    <div class="alert alert-info">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Para exportar o .srt no DaVinci: <strong>Inspector &gt; Transcrição &gt; ícone de 3 pontos &gt; Export Transcript.</strong><br>
+      O nome do arquivo de mídia está em <strong>Media Pool</strong>: botão direito no clipe &gt; Clip Attributes.</span>
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label for="reel">Nome do arquivo de mídia (REEL NAME)</label>
+        <input type="text" id="reel" placeholder="ex: podcast_ep42.mp4" />
+        <span class="tip">⚠ Deve ser idêntico ao nome exibido no Media Pool do DaVinci.</span>
+      </div>
+      <div class="field">
+        <label for="fps">Frame rate</label>
+        <select id="fps">
+          <option value="23.976">23.976 fps</option>
+          <option value="24">24 fps</option>
+          <option value="25">25 fps</option>
+          <option value="29.97" selected>29.97 fps</option>
+          <option value="30">30 fps</option>
+          <option value="60">60 fps</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="field">
+        <label for="minDur">Duração mínima do corte (minutos)</label>
+        <input type="number" id="minDur" value="8" min="1" max="60" />
+      </div>
+      <div class="field">
+        <label for="maxClips">Máximo de cortes para retornar</label>
+        <input type="number" id="maxClips" value="5" min="1" max="10" />
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-label">Transcrição .srt</div>
+    <textarea id="srtInput" placeholder="Cole aqui o conteúdo do arquivo .srt exportado pelo DaVinci Resolve..."></textarea>
+  </div>
+
+  <div class="actions-row">
+    <button class="btn-primary" id="analyzeBtn" onclick="analyze()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Analisar cortes virais
+    </button>
+  </div>
+
+  <div id="output"></div>
+
+  <footer>
+    Cole o .srt, configure o projeto e baixe o EDL pronto para importar no DaVinci Resolve.<br>
+    Powered by Claude claude-sonnet-4-6
+  </footer>
+
+</div>
+
+<script>
+const API_URL = "https://api.anthropic.com/v1/messages";
+
+function srtToSeconds(tc) {
+  const [h, m, rest] = tc.split(":");
+  const [s, ms] = rest.replace(",", ".").split(".");
+  return parseInt(h) * 3600 + parseInt(m) * 60 + parseInt(s) + parseFloat("0." + (ms || "0"));
+}
+
+function secondsToEDLTC(sec, fps) {
+  const totalFrames = Math.round(sec * fps);
+  const f = totalFrames % Math.round(fps);
+  const s = Math.floor(totalFrames / Math.round(fps)) % 60;
+  const m = Math.floor(totalFrames / Math.round(fps) / 60) % 60;
+  const h = Math.floor(totalFrames / Math.round(fps) / 3600);
+  return [h, m, s, f].map(v => String(v).padStart(2, "0")).join(":");
+}
+
+function generateEDL(clips, reel, fps) {
+  let edl = `TITLE: Podcast Viral Clips\nFCM: NON-DROP FRAME\n\n`;
+  clips.forEach((c, i) => {
+    const num = String(i + 1).padStart(3, "0");
+    const inTC = secondsToEDLTC(c.in, fps);
+    const outTC = secondsToEDLTC(c.out, fps);
+    const reelName = reel.replace(/\s+/g, "_");
+    edl += `${num}  ${reelName}  V  C  ${inTC} ${outTC} ${inTC} ${outTC}\n`;
+    edl += `* FROM CLIP NAME: ${reel}\n`;
+    edl += `* COMMENT: ${c.title}\n\n`;
+  });
+  return edl;
+}
+
+function downloadEDL(content, filename) {
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+async function analyze() {
+  const srt = document.getElementById("srtInput").value.trim();
+  const reel = document.getElementById("reel").value.trim();
+  const fps = parseFloat(document.getElementById("fps").value);
+  const minDur = parseInt(document.getElementById("minDur").value) || 8;
+  const maxClips = parseInt(document.getElementById("maxClips").value) || 5;
+
+  if (!srt) { alert("Cole o conteúdo .srt antes de continuar."); return; }
+  if (!reel) { alert("Informe o nome do arquivo de mídia (REEL NAME)."); return; }
+
+  const btn = document.getElementById("analyzeBtn");
+  btn.disabled = true;
+
+  const out = document.getElementById("output");
+  out.style.display = "flex";
+  out.innerHTML = `<div class="loading-row"><div class="spinner"></div><span>Analisando transcrição com Claude...</span></div>`;
+
+  const prompt = `Você é um especialista em crescimento de canais de YouTube e viralização de conteúdo.
+
+Analise a transcrição SRT de um podcast abaixo e identifique até ${maxClips} momentos com alto potencial de viralização ou engajamento no YouTube como clipe independente.
+
+Critérios de seleção:
+- Revelações, confissões ou surpresas
+- Momentos emocionais intensos
+- Afirmações polêmicas ou contraintuitivas
+- Histórias com tensão e resolução
+- Frases de impacto ou insights memoráveis
+- Humor genuíno
+- Conselhos práticos muito específicos
+
+IMPORTANTE: Cada corte deve ter DURAÇÃO MÍNIMA DE ${minDur} MINUTOS (${minDur * 60} segundos). Calcule a duração como (timestamp_out - timestamp_in). Ignore trechos menores.
+
+Para cada corte retorne APENAS um JSON válido, sem texto antes ou depois, sem markdown. Formato:
+{
+  "clips": [
+    {
+      "in": 123.4,
+      "out": 623.4,
+      "title": "Título para YouTube (máx 60 caracteres)",
+      "thumbnail": "Texto thumbnail (máx 20 caracteres)",
+      "why": "Explicação de 1-2 frases sobre o potencial viral deste trecho"
+    }
+  ]
+}
+
+Transcrição SRT:
+${srt}`;
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      out.innerHTML = `<div class="alert alert-warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Erro da API: ${data.error.message}</span></div>`;
+      btn.disabled = false;
+      return;
+    }
+
+    const raw = data.content.find(b => b.type === "text")?.text || "";
+    const clean = raw.replace(/```json|```/g, "").trim();
+    const parsed = JSON.parse(clean);
+    const clips = parsed.clips || [];
+
+    if (!clips.length) {
+      out.innerHTML = `<div class="alert alert-warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Nenhum corte encontrado com duração mínima de ${minDur} minutos. Tente reduzir a duração mínima ou verifique o .srt.</span></div>`;
+      btn.disabled = false;
+      return;
+    }
+
+    const edl = generateEDL(clips, reel, fps);
+
+    let html = `<div class="results-header">
+      <span class="results-count"><strong>${clips.length}</strong> corte${clips.length > 1 ? "s" : ""} encontrado${clips.length > 1 ? "s" : ""}</span>
+      <button class="btn-dl" onclick="downloadEDL(${JSON.stringify(edl).replace(/'/g,"&#39;")}, 'viral_clips.edl')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Baixar EDL
+      </button>
+    </div>`;
+
+    clips.forEach((c, i) => {
+      const durSec = Math.round(c.out - c.in);
+      const durMin = Math.floor(durSec / 60);
+      const durS = durSec % 60;
+      html += `<div class="clip-card">
+        <div class="clip-top">
+          <div class="clip-num">${i + 1}</div>
+          <span class="tc">${secondsToEDLTC(c.in, fps)} → ${secondsToEDLTC(c.out, fps)}</span>
+          <span class="dur-badge">${durMin}min ${durS}s</span>
+        </div>
+        <div class="clip-title">${c.title}</div>
+        <div class="thumb-row">
+          <span class="thumb-label">thumbnail</span>
+          <span class="thumb-pill">${c.thumbnail}</span>
+        </div>
+        <div class="divider"></div>
+        <div class="clip-why">${c.why}</div>
+      </div>`;
+    });
+
+    out.innerHTML = html;
+
+  } catch (e) {
+    out.innerHTML = `<div class="alert alert-warn"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span>Erro ao processar: ${e.message}. Verifique se o .srt está no formato correto.</span></div>`;
+  }
+
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
